@@ -7,7 +7,7 @@ def dtw(cur_model, x_cur, max_dist):
 
 def new_segment_size(x, cur, models, s_min, s_max, max_dist):
     num_models = len(models)
-    avg_costs = np.ones((s_max, num_models + 1, s_max))
+    avg_costs = np.ones((s_max, num_models + 1, s_max))*np.infty
     for s in range(s_min, s_max + 1):
         if cur + s + 1 >= x.shape[1]:
             continue
