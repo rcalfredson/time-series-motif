@@ -24,7 +24,6 @@ def dtw(vec_existing: np.ndarray, vec_new: np.ndarray, max_dist):
         m_min = max(1, n - max_dist + 1)
         m_max = min(M, n + max_dist + 1)
         for m in range(m_min, m_max):
-
             D[n, m] = d[n, m] + min(
                 min(D[n - 1, m] + mcost, D[n - 1, m - 1]), D[n, m - 1] + ncost
             )
@@ -49,6 +48,6 @@ def dtw(vec_existing: np.ndarray, vec_new: np.ndarray, max_dist):
             elif number == 2:
                 n = n - 1
                 m = m - 1
-    k = k + 1
-    # w = np.block([w, [n, m]])
+        k = k + 1
+        w = np.vstack([w, [[n, m]]])
     return Dist, D, k, w
