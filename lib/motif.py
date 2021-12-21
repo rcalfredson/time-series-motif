@@ -4,11 +4,19 @@ def find_motifs(x):
   """Transforms time-series data into a sequence of motifs.
   
   Parameters:
-      x (list): time-series data points
+      x (ndarray): a d-by-N time series, where d is dimensionality and N is length
+      s_min (int): min segment length
+      s_max (int): max segment length
+      max_dist (float): max warping distance
+      verbose: verbosity level (0 for low and 1 for high)
 
-  Returns:
-      motifs (ndarray): array of detected motifs
-      sequence (ndarray): motif indices of the sequenced time-series data
+  Output:
+      models (list): list of motifs
+      starts (list): starts of each segment
+      ends (list): ends of each segment
+      idx (list): index of vocabulary term assigned to each segment
+      best_prefix_length (int): can usually be ignored; this indicates the partial matching of a vocabulary term at the end of the data
+      tot_err (float): total error in terms of description length
   """
   starts = []
   ends = []
