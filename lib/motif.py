@@ -1,6 +1,7 @@
 import numpy as np
 
 from lib.dtw import dtw
+from lib.list_helpers import pad_insert
 from lib.segment import new_segment_size
 
 
@@ -41,18 +42,53 @@ def find_motifs(x, s_min, s_max, max_dist, verbose):
     while ends[-1] + termination_threshold < x.shape[1]:
         cur_idx = len(starts) + 1
         cur = ends[-1] + 1
-        if cur_idx + 1 < len(starts):
-            starts.extend([0] * (cur_idx + 1 - len(starts)))
-        starts[cur_idx] = cur
+        starts = pad_insert(starts, cur, cur_idx)
+
         print(f"Segment {cur_idx} at position {cur}========\n")
         num_models = len(models)
-        ave_costs = np.ones((num_models, s_max)) * np.infty
+        avg_costs = np.ones((num_models, s_max)) * np.infty
         cur_end = min(cur + s_max - 1, x.shape[1])
         x_cur = x[:, cur:cur_end]
         for k in range(num_models):
             dtw_dist, dtw_mat, _, dtw_trace = dtw(models[k], x_cur, max_dist)
             dtw_costs = dtw_mat[-1, :]
-            ave_costs[k, 0 : x_cur.shape[1]] = dtw_costs / np.arange(x_cur.shape[1])
-            ave_costs[k, 0:s_min-1] = np.nan
-        best_idx = np.argmin(ave_costs)
-        best_cost = ave_costs[np.unravel_index(best_idx, ave_costs.shape)]
+            avg_costs[k, 0 : x_cur.shape[1]] = dtw_costs / np.arange(x_cur.shape[1])
+            avg_costs[k, 0 : s_min - 1] = np.nan
+        best_idx = np.argmin(avg_costs)
+        best_cost = avg_costs[np.unravel_index(best_idx, avg_costs.shape)]
+        best_k, best_size = np.unravel_index(best_idx, avg_costs.shape)
+
+        if cur + s_max >= x.shape[1]:
+            good_prefix_costs = np.ones((num_models, 1)) * np.nan
+            good_prefix_lengths = np.ones((num_models, 1)) * np.nan
+            for k in range(num_models):
+                _, dtw_mat, _, _ = dtw(models[k], x_cur, max_dist)
+                prefix_costs = dtw_mat[:, -1]
+                avg_prefix_costs = prefix_costs / np.arange(
+                    start=1, stop=len(models[k]) + 1
+                )
+                good_prefix_lengths[k] = np.argmin(avg_prefix_costs)
+                good_prefix_costs[k] = avg_prefix_costs[
+                    np.unravel_index(good_prefix_lengths[k], avg_prefix_costs.shape)
+                ]
+            best_prefix_k = np.argmin(good_prefix_costs)
+            best_prefix_cost = good_prefix_costs[
+                np.unravel_index(best_prefix_k, good_prefix_costs.shape)
+            ]
+            best_prefix_length = good_prefix_lengths[best_prefix_k]
+            print(
+                f"end state: best k is {best_k}, best cost is {best_cost:.3f},"
+                f" best prefix cost is {best_prefix_cost:.3f}"
+            )
+            if best_prefix_cost < best_cost:
+                print(f"ending with prefix")
+                ends = pad_insert(ends, np.max(x.shape), cur_idx)
+                idx = pad_insert(idx, best_prefix_k, cur_idx)
+        print(f"cluster costs: {avg_costs[:, best_size]:.2f}")
+        print(
+            f"new cluster costs for {x.shape[0]}: ",
+            f"{new_cluster_threshold*mean_dev*x.shape[0]:.2f}",
+        )
+        print(f"size chosen: {best_size}")
+        x_best = x[:, cur : cur + best_size - 2]
+
