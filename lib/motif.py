@@ -91,4 +91,24 @@ def find_motifs(x, s_min, s_max, max_dist, verbose):
         )
         print(f"size chosen: {best_size}")
         x_best = x[:, cur : cur + best_size - 2]
+        if best_cost > new_cluster_threshold * mean_dev and len(models) < max_vocab:
+            print(f"=> new cluster")
+            best_s1, _ = new_segment_size(x, cur, models, s_min, s_max, max_dist)
+            ends = pad_insert(ends, cur + best_s1 - 1, cur_idx)
+            idx = pad_insert(idx, num_models + 1, cur_idx)
+            models[num_models + 1] = x[:, starts[cur_idx] : ends[cur_idx]]
+            tot_err = tot_err + new_cluster_threshold * mean_dev * best_s1
+        else:
+            print(f"=> cluster {best_k}")
+            ends = pad_insert(ends, cur + best_size - 1, cur_idx)
+            idx = pad_insert(idx, best_k, cur_idx)
+            tot_err = tot_err + best_cost * best_size
+            _, _, _, dtw_trace = dtw(models[best_k], x_best, max_dist)
+            trace_summed = np.zeros(models[best_k].shape)
+            for t in range(dtw_trace.shape[0]):
+                trace_summed[:, dtw_trace[t, 0]] = (
+                    trace_summed[:, dtw_trace[t, 0]] + x_best[:, dtw_trace[t, 1]]
+                )
+            trace_counts = np.unique(dtw_trace[:, 0], return_counts=True)[:, 1].T
+            trace_avg = trace_summed / trace_counts
 
