@@ -111,4 +111,7 @@ def find_motifs(x, s_min, s_max, max_dist, verbose):
                 )
             trace_counts = np.unique(dtw_trace[:, 0], return_counts=True)[:, 1].T
             trace_avg = trace_summed / trace_counts
-
+            models[best_k] = (
+                model_momentum * models[best_k] + (1 - model_momentum) * trace_avg
+            )
+    return models, starts, ends, idx, best_prefix_length, tot_err
