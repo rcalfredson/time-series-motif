@@ -5,6 +5,3 @@ class MarkovChain:
         for i in range(max_ord):
             self.maps[i] = {}
         self.chars = []
-
-def init_markov(max_ord):
-    

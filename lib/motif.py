@@ -2,7 +2,7 @@ import numpy as np
 
 from lib.dtw import dtw
 from lib.list_helpers import pad_insert
-from lib.markov import MarkovChain, init_markov
+from lib.markov import MarkovChain
 from lib.segment import new_segment_size
 
 
