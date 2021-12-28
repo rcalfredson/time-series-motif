@@ -2,10 +2,28 @@ import numpy as np
 
 from lib.dtw import dtw
 from lib.list_helpers import pad_insert
+from lib.markov import MarkovChain, init_markov
 from lib.segment import new_segment_size
 
 
-def find_motifs(x, s_min, s_max, max_dist, verbose):
+def forecast_motifs(x, pred_len, s_min, s_max, max_dist):
+    ndim = x.shape[0]
+    N = x.shape[1]
+    tot_len = pred_len + N
+    models, starts, ends, idx, best_prefix_length, _ = find_motifs(x, s_min, s_max, max_dist)
+    print(f"prefix length: {best_prefix_length}")
+
+    x_p = x
+    p_starts = []
+    p_ends = []
+    suffix = models[idx[-1]][:, best_prefix_length:]
+    if suffix.size != 0:
+        x_p = np.vstack((x_p, (suffix + x[:, -1] - suffix[:, 0])))
+        p_starts[0] = x.shape[1] + 1
+        p_ends[0] = x_p.shape[1]
+    m = MarkovChain(3)
+
+def find_motifs(x, s_min, s_max, max_dist):
     """Transforms time-series data into a sequence of motifs.
   
   Parameters:
@@ -13,7 +31,6 @@ def find_motifs(x, s_min, s_max, max_dist, verbose):
       s_min (int): min segment length
       s_max (int): max segment length
       max_dist (float): max warping distance
-      verbose: verbosity level (0 for low and 1 for high)
 
   Output:
       models (list): list of motifs
