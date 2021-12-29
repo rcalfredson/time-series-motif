@@ -22,6 +22,8 @@ def forecast_motifs(x, pred_len, s_min, s_max, max_dist):
         p_starts[0] = x.shape[1] + 1
         p_ends[0] = x_p.shape[1]
     m = MarkovChain(3)
+    for i in range(idx):
+        pass
 
 def find_motifs(x, s_min, s_max, max_dist):
     """Transforms time-series data into a sequence of motifs.
