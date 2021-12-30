@@ -2,6 +2,7 @@ import numpy as np
 
 from lib.dtw import dtw
 
+
 def new_segment_size(x, cur, models, s_min, s_max, max_dist):
     num_models = len(models)
     avg_costs = np.ones((s_max, num_models + 1, s_max)) * np.infty

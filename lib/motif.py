@@ -10,7 +10,9 @@ def forecast_motifs(x, pred_len, s_min, s_max, max_dist):
     ndim = x.shape[0]
     N = x.shape[1]
     tot_len = pred_len + N
-    models, starts, ends, idx, best_prefix_length, _ = find_motifs(x, s_min, s_max, max_dist)
+    models, starts, ends, idx, best_prefix_length, _ = find_motifs(
+        x, s_min, s_max, max_dist
+    )
     print(f"prefix length: {best_prefix_length}")
 
     x_p = x
@@ -23,7 +25,12 @@ def forecast_motifs(x, pred_len, s_min, s_max, max_dist):
         p_ends[0] = x_p.shape[1]
     m = MarkovChain(3)
     for i in range(idx):
-        pass
+        m.update(idx[:i])
+    p_idx = []
+    while x_p.shape[1] < tot_len:
+        best_char = m.predict(idx + p_idx)
+        p_idx.append(best_char)
+
 
 def find_motifs(x, s_min, s_max, max_dist):
     """Transforms time-series data into a sequence of motifs.
