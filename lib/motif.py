@@ -7,9 +7,9 @@ from lib.segment import new_segment_size
 
 
 def forecast_motifs(x, pred_len, s_min, s_max, max_dist):
-    ndim = x.shape[0]
     N = x.shape[1]
     tot_len = pred_len + N
+    print('x in forecast motifs:', x)
     models, starts, ends, idx, best_prefix_length, _ = find_motifs(
         x, s_min, s_max, max_dist
     )
@@ -30,6 +30,14 @@ def forecast_motifs(x, pred_len, s_min, s_max, max_dist):
     while x_p.shape[1] < tot_len:
         best_char = m.predict(idx + p_idx)
         p_idx.append(best_char)
+        p_starts.append(len(x_p) + 1)
+        x_p = np.hstack((x_p, models[best_char]))
+        p_ends.append(len(x_p))
+    if suffix.size != 0:
+        p_idx.insert(0, idx[-1])
+    x_p = x_p[:, len(x) + 1 : tot_len]
+    p_ends.append(tot_len)
+    return models, starts, ends, idx, best_prefix_length
 
 
 def find_motifs(x, s_min, s_max, max_dist):
@@ -52,6 +60,7 @@ def find_motifs(x, s_min, s_max, max_dist):
     starts = []
     ends = []
     starts.append(0)
+    print('x before calling new seg size:', x)
     best_initial, _ = new_segment_size(
         x, 0, [], s_min=s_min, s_max=s_max, max_dist=max_dist
     )
