@@ -9,11 +9,9 @@ from lib.segment import new_segment_size
 def forecast_motifs(x, pred_len, s_min, s_max, max_dist):
     N = x.shape[1]
     tot_len = pred_len + N
-    print('x in forecast motifs:', x)
     models, starts, ends, idx, best_prefix_length, _ = find_motifs(
         x, s_min, s_max, max_dist
     )
-    print(f"prefix length: {best_prefix_length}")
 
     x_p = x
     p_starts = []
@@ -60,7 +58,6 @@ def find_motifs(x, s_min, s_max, max_dist):
     starts = []
     ends = []
     starts.append(0)
-    print('x before calling new seg size:', x)
     best_initial, _ = new_segment_size(
         x, 0, [], s_min=s_min, s_max=s_max, max_dist=max_dist
     )
@@ -83,14 +80,14 @@ def find_motifs(x, s_min, s_max, max_dist):
         num_models = len(models)
         avg_costs = np.ones((num_models, s_max)) * np.infty
         cur_end = min(cur + s_max - 1, x.shape[1])
-        x_cur = x[:, cur:cur_end]
+        x_cur = x[:, cur:cur_end+1]
         for k in range(num_models):
             dtw_dist, dtw_mat, _, dtw_trace = dtw(models[k], x_cur, max_dist)
             dtw_costs = dtw_mat[-1, :]
-            avg_costs[k, 0 : x_cur.shape[1]] = dtw_costs / np.arange(x_cur.shape[1])
-            avg_costs[k, 0 : s_min - 1] = np.nan
-        best_idx = np.argmin(avg_costs)
-        best_cost = avg_costs[np.unravel_index(best_idx, avg_costs.shape)]
+            avg_costs[k, 0 : x_cur.shape[1] ] = dtw_costs / np.arange(x_cur.shape[1])
+            avg_costs[k, 0:s_min] = np.nan
+        best_idx = np.nanargmin(avg_costs.flatten())
+        best_cost = avg_costs.flatten()[best_idx]
         best_k, best_size = np.unravel_index(best_idx, avg_costs.shape)
 
         if cur + s_max >= x.shape[1]:
@@ -119,7 +116,7 @@ def find_motifs(x, s_min, s_max, max_dist):
                 print(f"ending with prefix")
                 ends = pad_insert(ends, np.max(x.shape), cur_idx)
                 idx = pad_insert(idx, best_prefix_k, cur_idx)
-        print(f"cluster costs: {avg_costs[:, best_size]:.2f}")
+        print("cluster costs:", np.around(avg_costs[:, best_size], 2))
         print(
             f"new cluster costs for {x.shape[0]}: ",
             f"{new_cluster_threshold*mean_dev*x.shape[0]:.2f}",

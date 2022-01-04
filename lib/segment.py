@@ -21,6 +21,6 @@ def new_segment_size(x, cur, models, s_min, s_max, max_dist):
                 1, x_cur.shape[1] + 1
             )
             avg_costs[s - 1, k - 1, 0:s_min] = np.inf
-    _, best_idx = np.nanmin(avg_costs[:])
+    best_idx = np.argmin(avg_costs)
     best_s1, best_k, _ = np.unravel_index(best_idx, avg_costs.shape)
     return best_s1, best_k
