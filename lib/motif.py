@@ -1,6 +1,6 @@
 import numpy as np
 
-from lib.dtw import dtw
+from lib.dtw import DTW
 from lib.list_helpers import pad_insert
 from lib.markov import MarkovChain
 from lib.segment import new_segment_size
@@ -82,7 +82,7 @@ def find_motifs(x, s_min, s_max, max_dist):
         cur_end = min(cur + s_max - 1, x.shape[1])
         x_cur = x[:, cur:cur_end+1]
         for k in range(num_models):
-            dtw_dist, dtw_mat, _, dtw_trace = dtw(models[k], x_cur, max_dist)
+            dtw_dist, dtw_mat, _, dtw_trace = DTW(models[k], x_cur, max_dist).dtw()
             dtw_costs = dtw_mat[-1, :]
             avg_costs[k, 0 : x_cur.shape[1] ] = dtw_costs / np.arange(x_cur.shape[1])
             avg_costs[k, 0:s_min] = np.nan
@@ -94,7 +94,7 @@ def find_motifs(x, s_min, s_max, max_dist):
             good_prefix_costs = np.ones((num_models, 1)) * np.nan
             good_prefix_lengths = np.ones((num_models, 1)) * np.nan
             for k in range(num_models):
-                _, dtw_mat, _, _ = dtw(models[k], x_cur, max_dist)
+                _, dtw_mat, _, _ = DTW(models[k], x_cur, max_dist).dtw()
                 prefix_costs = dtw_mat[:, -1]
                 avg_prefix_costs = prefix_costs / np.arange(
                     start=1, stop=len(models[k]) + 1
@@ -135,7 +135,7 @@ def find_motifs(x, s_min, s_max, max_dist):
             ends = pad_insert(ends, cur + best_size - 1, cur_idx)
             idx = pad_insert(idx, best_k, cur_idx)
             tot_err = tot_err + best_cost * best_size
-            _, _, _, dtw_trace = dtw(models[best_k], x_best, max_dist)
+            _, _, _, dtw_trace = DTW(models[best_k], x_best, max_dist).dtw()
             trace_summed = np.zeros(models[best_k].shape)
             for t in range(dtw_trace.shape[0]):
                 trace_summed[:, dtw_trace[t, 0]] = (
